@@ -1,0 +1,63 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "fvm: ensure installed",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "export PATH=\"$PATH:$HOME/.pub-cache/bin\"; command -v fvm >/dev/null 2>&1 && exit 0; if command -v dart >/dev/null 2>&1; then dart pub global activate fvm; elif command -v flutter >/dev/null 2>&1; then flutter pub global activate fvm; else echo \"Neither 'dart' nor 'flutter' found in PATH. Install Flutter/Dart first.\"; exit 1; fi"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "fvm: use flutter",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-lc", "export PATH=\"$PATH:$HOME/.pub-cache/bin\"; fvm use 3.38.3 --force"],
+      "dependsOn": ["fvm: ensure installed"],
+      "problemMatcher": []
+    },
+    {
+      "label": "fvm: pub get",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-lc", "export PATH=\"$PATH:$HOME/.pub-cache/bin\"; fvm flutter pub get"],
+      "dependsOn": ["fvm: use flutter"],
+      "problemMatcher": []
+    },
+    {
+      "label": "fvm: build apk (debug)",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-lc", "export PATH=\"$PATH:$HOME/.pub-cache/bin\"; fvm flutter build apk --debug"],
+      "dependsOn": ["fvm: pub get"],
+      "problemMatcher": []
+    },
+    {
+      "label": "fvm: build apk (release)",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-lc", "export PATH=\"$PATH:$HOME/.pub-cache/bin\"; fvm flutter build apk --release"],
+      "dependsOn": ["fvm: pub get"],
+      "problemMatcher": []
+    },
+    {
+      "label": "fvm: build ios (release)",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-lc", "export PATH=\"$PATH:$HOME/.pub-cache/bin\"; fvm flutter build ios --release"],
+      "dependsOn": ["fvm: pub get"],
+      "problemMatcher": []
+    },
+    {
+      "label": "fvm: build web (release)",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-lc", "export PATH=\"$PATH:$HOME/.pub-cache/bin\"; fvm flutter build web --release"],
+      "dependsOn": ["fvm: pub get"],
+      "problemMatcher": []
+    }
+  ]
+}
