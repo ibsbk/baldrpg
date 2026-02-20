@@ -1,0 +1,76 @@
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          dart-version: stable
+
+      - name: Install FVM
+        run: |
+          dart pub global activate fvm
+          echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+
+      - name: Cache pub + fvm
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ~/.fvm
+          key: ${{ runner.os }}-dart-${{ hashFiles('pubspec.lock') }}-fvm-${{ hashFiles('.fvm/fvm_config.json') }}
+          restore-keys: |
+            ${{ runner.os }}-dart-
+
+      - name: Install Flutter (via FVM)
+        run: |
+          fvm --version
+          fvm install
+          fvm use 3.38.3 --force
+          fvm flutter --version
+
+      - name: Get dependencies
+        run: fvm flutter pub get
+
+      - name: Build web (release)
+        env:
+          BASE_HREF: "/${{ github.event.repository.name }}/"
+        run: fvm flutter build web --release --base-href "$BASE_HREF"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
